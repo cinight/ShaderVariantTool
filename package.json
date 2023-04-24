@@ -3,7 +3,7 @@
   "version": "0.5.0",
   "description": "ShaderVariantTool lists out all shader keywords and variant counts that are being included in player build and before stripping.",
   "displayName": "ShaderVariantTool",
-  "unity": "2021.2",
+  "unity": "2021.3",
   "author": {
     "name": "mingwai"
   },
