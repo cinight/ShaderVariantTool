@@ -9,7 +9,9 @@ Unity 2022.2.6f1+
 1. On Unity Editor > Window > Package Manager
 2. On top left, click "+"
 3. Select "Add package from git URL..."
-4. Copy and paste `https://github.com/cinight/ShaderVariantTool.git`
+4. Copy and paste:
+   - For Unity **2022.2.6f1+**: `https://github.com/cinight/ShaderVariantTool.git`
+   - For Unity **2021.3.18f1+**: `https://github.com/cinight/ShaderVariantTool.git#2021.3`
 5. Click Add
 
 ### How to use:
