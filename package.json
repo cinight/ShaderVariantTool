@@ -1,10 +1,9 @@
 {
   "name": "com.cinight.shader-variant-tool",
-  "version": "1.0.0",
+  "version": "0.5.0",
   "description": "ShaderVariantTool lists out all shader keywords and variant counts that are being included in player build and before stripping.",
   "displayName": "ShaderVariantTool",
-  "unity": "2022.2",
-  "unityRelease": "6f1",
+  "unity": "2021.2",
   "author": {
     "name": "mingwai"
   },

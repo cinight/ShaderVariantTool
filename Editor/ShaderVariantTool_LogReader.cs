@@ -1,10 +1,8 @@
-﻿using System;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace GfxQA.ShaderVariantTool
 {
@@ -14,7 +12,6 @@ namespace GfxQA.ShaderVariantTool
         private int selectedTimeStamp = 0;
         private string editorLogPath = "";
         private string savedFile = "";
-        private CultureInfo culture = new CultureInfo("is-IS");
 
         [MenuItem("Window/ShaderVariantTool_LogReader")]
         public static void ShowWindow ()
@@ -56,6 +53,7 @@ namespace GfxQA.ShaderVariantTool
 
             //Width for the columns & style
             float currentSize = this.position.width;
+            float widthForEach = currentSize / (SVL.columns.Length-1+currentSize*0.0002f);
             GUIStyle background = new GUIStyle 
             { 
                 normal = 
@@ -85,8 +83,33 @@ namespace GfxQA.ShaderVariantTool
             //Read log and save the CSV file
             if (GUILayout.Button ("Read log",GUILayout.Width(200)))
             {
-                //Write File
-                List<string[]> outputRows = ShaderVariantTool_BuildPostprocess.WriteCSVFile(null,editorLogPath,timeStamps[selectedTimeStamp]);
+                //ReadLog
+                List<CompiledShader> slist = ShaderVariantTool_BuildPostprocess.ReadShaderCompileInfo(timeStamps[selectedTimeStamp],editorLogPath,true);
+
+                //Prepare CSV string
+                List<string[]> outputRows = new List<string[]>();
+
+                //Overview
+                int total_shaderCount = slist.Count;
+                int total_variantBeforeStripping = 0;
+                int total_variantInBuild = 0;
+                int total_variantInCache = 0;
+                int total_variantCompiled = 0;
+                for(int i=0; i<total_shaderCount; i++)
+                {
+                    total_variantBeforeStripping += slist[i].editorLog_originalVariantCount;
+                    total_variantInBuild += slist[i].editorLog_remainingVariantCount;
+                    total_variantInCache += slist[i].editorLog_variantInCacheCount;
+                    total_variantCompiled += slist[i].editorLog_compiledVariantCount;
+                }
+                outputRows.Add( new string[] { "Shader Count" , total_shaderCount.ToString() } );
+                outputRows.Add( new string[] { "Shader Variant Count before Stripping" , total_variantBeforeStripping.ToString() } );
+                outputRows.Add( new string[] { "Shader Variant Count in Build" , total_variantInBuild+
+                " (cached:" + total_variantInCache + " compiled:" + total_variantCompiled +")" } );
+                outputRows.Add( new string[] { "" } );
+
+                //Info for each shader
+                outputRows = ShaderVariantTool_BuildPostprocess.AddEditorLogShaderInfo(outputRows,slist);
 
                 //Save File
                 string fileName = "ShaderVariant_ReadLog_"+timeStamps[selectedTimeStamp].Replace(SVL.buildProcessIDTitleStart,"");
