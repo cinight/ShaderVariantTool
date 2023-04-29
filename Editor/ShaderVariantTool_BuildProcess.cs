@@ -1,16 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.IO;
 using System.Text;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
-using UnityEditor.Rendering;
 using UnityEditorInternal;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace GfxQA.ShaderVariantTool
 {
@@ -309,13 +305,13 @@ namespace GfxQA.ShaderVariantTool
 
             //Variant Table Column header
             SVL.ReadUXMLForColumns();
-            outputRows.Add(SVL.columns.ToArray());
+            outputRows.Add(SVL.columns);
 
             //Variant Table
             foreach(ShaderItem si in SVL.shaderlist)
             {
                 //Each keyword item
-                si.keywordItems = si.keywordItems.OrderByDescending(o=>o.appearCount_after).ToList();//.ThenBy(o=>o.shaderKeywordName)
+                si.keywordItems.Sort((x, y) => y.appearCount_after.CompareTo(x.appearCount_after)); //Decending order
                 for(int k=0; k < si.keywordItems.Count; k++)
                 {
                     KeywordItem ki = si.keywordItems[k];

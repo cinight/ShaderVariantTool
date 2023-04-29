@@ -5,7 +5,6 @@ using UnityEngine.Rendering;
 using System;
 using System.IO;
 using System.Globalization;
-using System.Linq;
 using UnityEditor;
 
 namespace GfxQA.ShaderVariantTool
@@ -19,19 +18,24 @@ namespace GfxQA.ShaderVariantTool
 
         private static string culturePref = "ShaderVariantTool_Culture";
         public static CultureInfo culture;
-        public static List<CultureInfo> cinfo;
+        public static CultureInfo[] cinfo;
 
         public static void SetupCultureInfo()
         {
-            if(cinfo == null) cinfo = CultureInfo.GetCultures(CultureTypes.AllCultures & ~CultureTypes.NeutralCultures).ToList<CultureInfo>();
+            if(cinfo == null) cinfo = CultureInfo.GetCultures(CultureTypes.AllCultures & ~CultureTypes.NeutralCultures);
             string cultureString = EditorPrefs.GetString(culturePref,"English (United States)");
-            if(culture == null ) culture = cinfo.Find(x => x.DisplayName == cultureString);
+            if(culture == null ) culture = GetCultureInfoWithName(cultureString);
+        }
+
+        private static CultureInfo GetCultureInfoWithName(string cultureString)
+        {
+            return Array.Find<CultureInfo>(cinfo, x => x.DisplayName == cultureString);
         }
 
         public static void UpdateCultureInfo(string displayName)
         {
             EditorPrefs.SetString(culturePref,displayName);
-            culture = cinfo.Find(x => x.DisplayName == displayName);
+            culture = GetCultureInfoWithName(displayName);
         }
 
         public static string NumberSeperator(string input)

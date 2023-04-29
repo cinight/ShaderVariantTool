@@ -52,8 +52,12 @@ namespace GfxQA.ShaderVariantTool
 
             //DropdownList
             DropdownField cultureDropdown = root.Q<DropdownField>(name:"CultureField");
-            cultureDropdown.choices = Helper.cinfo.Select(i => i.DisplayName).ToList();
-            cultureDropdown.index = Helper.cinfo.IndexOf(Helper.culture);
+            cultureDropdown.choices.Clear();
+            foreach(var cinfo in Helper.cinfo)
+            {
+                cultureDropdown.choices.Add(cinfo.DisplayName);
+            }
+            cultureDropdown.index = Array.IndexOf(Helper.cinfo,Helper.culture);
             cultureDropdown.RegisterValueChangedCallback(v =>
             {
                 Helper.UpdateCultureInfo(v.newValue);
@@ -233,7 +237,7 @@ namespace GfxQA.ShaderVariantTool
             }
 
             //sort file names, top is newest
-            CSVFileNames = CSVFileNames.OrderByDescending(o=>o).ToList();
+            CSVFileNames.Sort((x, y) => y.CompareTo(x)); //Decending order
         }
 
         private string[] ReadCSVFile()
@@ -369,14 +373,15 @@ namespace GfxQA.ShaderVariantTool
         //Add to list for setting selection state, so that it clears selection for collapsed items, otherwise table color is quite messy
         private void SetShaderTableSelection()
         {   
-            var rootIds = shaderTable.GetRootIds().ToList();
-            VisualElement shaderRowElement = shaderTable.GetRootElementForId(rootIds[0]);
+            var rootIds = shaderTable.GetRootIds();
+            VisualElement shaderRowElement = shaderTable.GetRootElementForId(rootIds.ElementAt(0));
             if(shaderRowElement == null) return;
             var rows = shaderRowElement.parent.Children();
             var listOfExpandedItems = new List<int>();
             for(int i=0; i<rows.Count(); i++)
             {
                 int rowId = shaderTable.GetIdForIndex(i);
+
                 bool rowIsRoot = rootIds.Contains(rowId);
                 if(rowIsRoot && shaderTable.IsExpanded(rowId))
                 {
@@ -418,7 +423,7 @@ namespace GfxQA.ShaderVariantTool
                 string[] shaderRowCells = new string[shaderTable.columns.Count];
                 for(int k=0; k<shaderRowCells.Length; k++)
                 {
-                    Column col = shaderTable.columns.ElementAt(k);
+                    Column col = shaderTable.columns[k];
                     int CSVColumnId = Array.FindIndex(shaderRowsHeaderFromCSV, e => e == col.title);
                     
                     shaderRowCells[k] = shaderRows[i][CSVColumnId];
@@ -516,11 +521,11 @@ namespace GfxQA.ShaderVariantTool
                     //sort numbers
                     if(sort[i].direction == SortDirection.Ascending)
                     {
-                        shaderRows = shaderRows.OrderBy(o=>float.Parse(o[columnId])).ToList();
+                        shaderRows.Sort((x, y) => float.Parse(x[columnId]).CompareTo( float.Parse(y[columnId]))); //Ascending order
                     }
                     else
                     {
-                        shaderRows = shaderRows.OrderByDescending(o=>float.Parse(o[columnId])).ToList();
+                        shaderRows.Sort((x, y) => float.Parse(y[columnId]).CompareTo(float.Parse(x[columnId]))); //Descending order
                     }
                 }
                 else if(columnId >= 0) //avoid columnId = -1
@@ -528,16 +533,15 @@ namespace GfxQA.ShaderVariantTool
                     //sort string Alphabetical Order
                     if(sort[i].direction == SortDirection.Ascending)
                     {
-                        shaderRows = shaderRows.OrderBy(o=>o[columnId]).ToList();
+                        shaderRows.Sort((x, y) => x[columnId].CompareTo( y[columnId])); //Ascending order
                     }
                     else
                     {
-                        shaderRows = shaderRows.OrderByDescending(o=>o[columnId]).ToList();
+                        shaderRows.Sort((x, y) => y[columnId].CompareTo( x[columnId])); //Descending order
                     }
                 }
-
             }
-            
+
             SetShaderRootItems();
             shaderTable.Rebuild();
             SetShaderTableSelection();
@@ -587,7 +591,7 @@ namespace GfxQA.ShaderVariantTool
             //Check if it's shader row
             int selectedIndex = shaderTable.selectedIndex;
             int selectedId = shaderTable.GetIdForIndex(selectedIndex);
-            var rootIds = shaderTable.GetRootIds().ToList();
+            var rootIds = shaderTable.GetRootIds();
             bool isRootRow = rootIds.Contains(selectedId);
             if(isRootRow)
             {
