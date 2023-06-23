@@ -118,20 +118,46 @@ namespace GfxQA.ShaderVariantTool
                 }
                 return;
             }
-            
+
+            //A list of keyword and type mapping
+            Dictionary<string, string> keywordDeclareType = new Dictionary<string, string>();
+
             //Read shader code and find the #pragma lines
             string shaderCode = System.IO.File.ReadAllText(assetPath);
-            string pattern = @"#pragma\s(\w+)\s(.*)";
+            GetDirectPragmaKeywordType(shaderCode, ref keywordDeclareType);
+
+            //Read #include_with_pragmas lines as declare types are in seperate hlsl
+            string pattern = @"#include_with_pragmas\s""(.*)""";
             MatchCollection matches = Regex.Matches(shaderCode, pattern);
             List<Match> matchesList = matches.ToList();
+            foreach(Match m in matchesList)
+            {
+                //Read hlsl code and find the #pragma lines
+                string hlslPath = m.Groups[1].Value;
+                string hlslCode = System.IO.File.ReadAllText(hlslPath);
+                GetDirectPragmaKeywordType(hlslCode, ref keywordDeclareType);
+            }
+
+            //Match the mapping with keywords
             foreach(KeywordItem item in keywordItems)
             {
-                //match.Groups[1] is declare type
-                //match.Groups[2] is keywords
-                Match m = matchesList.Find( o => o.Groups[2].Value.Contains(item.shaderKeywordName));
-                if(m != null)
+                string keyword = item.shaderKeywordName;
+                item.shaderKeywordDeclareType = keywordDeclareType.FirstOrDefault(x => x.Key.Contains(keyword)).Value;
+            }
+        }
+
+        private void GetDirectPragmaKeywordType(string shaderCode, ref Dictionary<string, string> keywordDeclareType)
+        {
+            //Read shader code and find the #pragma lines
+            string pattern = @"#pragma\s(?!\btarget\b)(\w+)\s(\w.*)";
+            MatchCollection matches = Regex.Matches(shaderCode, pattern);
+            List<Match> matchesList = matches.ToList();
+            foreach(Match m in matchesList)
+            {
+                string key = m.Groups[2].Value;
+                if(!keywordDeclareType.ContainsKey(key))
                 {
-                    item.shaderKeywordDeclareType = m.Groups[1].Value;
+                    keywordDeclareType.Add(key, m.Groups[1].Value);
                 }
             }
         }
