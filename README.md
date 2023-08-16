@@ -13,6 +13,7 @@ Unity 2022.2.6f1+
    - For Unity **2022.2.6f1+**: `https://github.com/cinight/ShaderVariantTool.git`
    - For Unity **2021.3.18f1+**: `https://github.com/cinight/ShaderVariantTool.git#2021.3`
 5. Click Add
+6. OR you can edit Packages/manifest.json and add <br>`"com.cinight.shader-variant-tool": "https://github.com/cinight/ShaderVariantTool.git",`
 
 ### How to use:
 1. Make a player build
