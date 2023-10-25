@@ -179,9 +179,9 @@ namespace GfxQA.ShaderVariantTool
                 //Bug Check - if the shader has errors, then the program count drops, the tool should print out error message to warn user too
                 if( !si.isComputeShader && shaderInternalProgramCount != si.editorLog_variantAfterSciptableStrippingCount)
                 {
-                    Debug.LogError("ShaderVariantTool error #E08. "+
-                    "Shader "+si.name+" has "+si.editorLog_variantAfterSciptableStrippingCount+" variants after ScriptableStripping, "+
-                    "but Internal Program Count is not having same number: "+shaderInternalProgramCount+". "+"This might due to this shader has errors, so please check console for the shader errors.");
+                    Debug.LogWarning("ShaderVariantTool error #E08. Shader "+si.name+" has "+si.editorLog_variantAfterSciptableStrippingCount+
+                    " variants after ScriptableStripping, but Internal Program Count is not having same number: "+shaderInternalProgramCount+
+                    ". Check console to see if this shader has errors. And if you have [Optimize mesh data] enabled in Player Settings, this is normal to see this warning if you have modified shader keywords.");
                 }
             }
 
