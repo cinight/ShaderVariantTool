@@ -109,40 +109,81 @@ namespace GfxQA.ShaderVariantTool
         //Use in Build Postprocessor
         public void SetKeywordDeclareType()
         {
-            //Not able to open this
-            if(assetPath.EndsWith("unity_builtin_extra"))
+            if(isComputeShader)
             {
+                //Not able to open this
+                if(assetPath.EndsWith("unity_builtin_extra"))
+                {
+                    foreach(KeywordItem item in keywordItems)
+                    {
+                        item.shaderKeywordDeclareType = "N/A for builtin rescource";
+                    }
+                    return;
+                }
+
+                //A list of keyword and type mapping
+                Dictionary<string, string> keywordDeclareType = new Dictionary<string, string>();
+
+                //Read shader code and find the #pragma lines
+                string shaderCode = System.IO.File.ReadAllText(assetPath);
+                GetDirectPragmaKeywordType(shaderCode, ref keywordDeclareType);
+
+                //Read #include_with_pragmas lines as declare types are in seperate hlsl
+                string pattern = @"#include_with_pragmas\s""(.*)""";
+                MatchCollection matches = Regex.Matches(shaderCode, pattern);
+                List<Match> matchesList = matches.ToList();
+                foreach(Match m in matchesList)
+                {
+                    //Read hlsl code and find the #pragma lines
+                    string hlslPath = m.Groups[1].Value;
+                    string hlslCode = System.IO.File.ReadAllText(hlslPath);
+                    GetDirectPragmaKeywordType(hlslCode, ref keywordDeclareType);
+                }
+
+                //Match the mapping with keywords
                 foreach(KeywordItem item in keywordItems)
                 {
-                    item.shaderKeywordDeclareType = "N/A for builtin rescource";
+                    string keyword = item.shaderKeywordName;
+                    item.shaderKeywordDeclareType = keywordDeclareType.FirstOrDefault(x => x.Key.Contains(keyword)).Value;
                 }
-                return;
             }
-
-            //A list of keyword and type mapping
-            Dictionary<string, string> keywordDeclareType = new Dictionary<string, string>();
-
-            //Read shader code and find the #pragma lines
-            string shaderCode = System.IO.File.ReadAllText(assetPath);
-            GetDirectPragmaKeywordType(shaderCode, ref keywordDeclareType);
-
-            //Read #include_with_pragmas lines as declare types are in seperate hlsl
-            string pattern = @"#include_with_pragmas\s""(.*)""";
-            MatchCollection matches = Regex.Matches(shaderCode, pattern);
-            List<Match> matchesList = matches.ToList();
-            foreach(Match m in matchesList)
+            else
             {
-                //Read hlsl code and find the #pragma lines
-                string hlslPath = m.Groups[1].Value;
-                string hlslCode = System.IO.File.ReadAllText(hlslPath);
-                GetDirectPragmaKeywordType(hlslCode, ref keywordDeclareType);
-            }
+                //A list of keyword and type mapping
+                Dictionary<string, string> keywordDeclareType = new Dictionary<string, string>();
+            
+                //Get the shader data
+                var shader = Shader.Find(name);
+                var shaderData = ShaderUtil.GetShaderData(shader);
+                var subShader = shaderData.GetSubshader(0);
+                for (int i = 0; i < subShader.PassCount; i++)
+                {
+                    //Get source code
+                    var pass = subShader.GetPass(i);
+                    string shaderCode = pass.SourceCode;
+                
+                    //Read shader code and find the #pragma lines
+                    GetDirectPragmaKeywordType(shaderCode, ref keywordDeclareType);
 
-            //Match the mapping with keywords
-            foreach(KeywordItem item in keywordItems)
-            {
-                string keyword = item.shaderKeywordName;
-                item.shaderKeywordDeclareType = keywordDeclareType.FirstOrDefault(x => x.Key.Contains(keyword)).Value;
+                    //Read #include_with_pragmas lines as declare types are in seperate hlsl
+                    string pattern = @"#include_with_pragmas\s""(.*)""";
+                    MatchCollection matches = Regex.Matches(shaderCode, pattern);
+                    List<Match> matchesList = matches.ToList();
+                    foreach(Match m in matchesList)
+                    {
+                        //Read hlsl code and find the #pragma lines
+                        string hlslPath = m.Groups[1].Value;
+                        string hlslCode = System.IO.File.ReadAllText(hlslPath);
+                        GetDirectPragmaKeywordType(hlslCode, ref keywordDeclareType);
+                    }
+                }
+            
+                //Match the mapping with keywords
+                foreach(KeywordItem item in keywordItems)
+                {
+                    string keyword = item.shaderKeywordName;
+                    item.shaderKeywordDeclareType = keywordDeclareType.FirstOrDefault(x => x.Key.Contains(keyword)).Value;
+                }
             }
         }
 
