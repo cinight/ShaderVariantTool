@@ -309,4 +309,13 @@ namespace GfxQA.ShaderVariantTool
         public string declareType;
         public string[] keywords;
     }
+    
+    //===================================================================================================
+
+    public class RawVariantData
+    {
+        public Shader shader;
+        public ShaderSnippetData snippetData;
+        public ShaderCompilerData compilerData;
+    }
 }

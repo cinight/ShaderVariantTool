@@ -821,6 +821,8 @@ namespace GfxQA.ShaderVariantTool
         
         //data
         public static List<ShaderItem> shaderlist = new List<ShaderItem>();
+        public static List<RawVariantData> variantDatalist_BeforeStrip = new List<RawVariantData>();
+        public static List<RawVariantData> variantDatalist_AfterStrip = new List<RawVariantData>();
         public static string[] columns;
         
         public static void ReadUXMLForColumns()
@@ -847,6 +849,8 @@ namespace GfxQA.ShaderVariantTool
                 ReadUXMLForColumns();
 
                 shaderlist.Clear();
+                variantDatalist_BeforeStrip.Clear();
+                variantDatalist_AfterStrip.Clear();
                 buildTime = 0;
 
                 //For reading EditorLog, we can extract the contents

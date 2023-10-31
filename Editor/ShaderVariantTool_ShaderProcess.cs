@@ -20,6 +20,17 @@ namespace GfxQA.ShaderVariantTool
 
         public void OnProcessShader(Shader shader, ShaderSnippetData snippet, IList<ShaderCompilerData> data)
         {
+            //Log raw data
+            for (int i = 0; i < data.Count; ++i)
+            {
+                RawVariantData rdata = new RawVariantData();
+                rdata.shader = shader;
+                rdata.snippetData = snippet;
+                rdata.compilerData = data[i];
+
+                SVL.variantDatalist_BeforeStrip.Add(rdata);
+            }
+
             //Log ShaderItem
             int shaderItemId = SVL.shaderlist.FindIndex( o=> o.name == shader.name );
             ShaderItem shaderItem;
@@ -79,6 +90,17 @@ namespace GfxQA.ShaderVariantTool
 
         public void OnProcessShader(Shader shader, ShaderSnippetData snippet, IList<ShaderCompilerData> data)
         {
+            //Log raw data
+            for (int i = 0; i < data.Count; ++i)
+            {
+                RawVariantData rdata = new RawVariantData();
+                rdata.shader = shader;
+                rdata.snippetData = snippet;
+                rdata.compilerData = data[i];
+
+                SVL.variantDatalist_AfterStrip.Add(rdata);
+            }
+            
             //Get existing ShaderItem
             int shaderItemId = SVL.shaderlist.FindIndex( o=> o.name == shader.name );
             ShaderItem shaderItem = SVL.shaderlist[shaderItemId];

@@ -190,13 +190,27 @@ namespace GfxQA.ShaderVariantTool
             {
                 Debug.LogError("ShaderVariantTool error #E01. "+
                 "Tool counted there are "+totalNormalShader.count_variant_after+" shader variants in build, "+
-                "but Editor Log counted "+totalNormalShader.editorLog_variantAfterSciptableStrippingCount+".");
+                " but Editor Log counted "+totalNormalShader.editorLog_variantAfterSciptableStrippingCount+".");
             }
             if( totalNormalShader.count_variant_before != totalNormalShader.editorLog_variantAfterBuiltinStrippingCount )
             {
                 Debug.LogError("ShaderVariantTool error #E02. "+
                 "Tool counted there are "+totalNormalShader.count_variant_before+" variants before striptable-stripping, "+
-                "but Editor Log counted "+totalNormalShader.editorLog_variantAfterBuiltinStrippingCount+".");
+                " but Editor Log counted "+totalNormalShader.editorLog_variantAfterBuiltinStrippingCount+".");
+            }
+            
+            //Bug check - see if raw data has the same count
+            if( totalNormalShader.count_variant_before != SVL.variantDatalist_BeforeStrip.Count )
+            {
+                Debug.LogError("ShaderVariantTool error #E09. "+
+                               "SVL.variantDatalist_BeforeStrip.Count is "+SVL.variantDatalist_BeforeStrip.Count+
+                               "but tool counted "+totalNormalShader.count_variant_before+".");
+            }
+            if( totalNormalShader.count_variant_after != SVL.variantDatalist_AfterStrip.Count )
+            {
+                Debug.LogError("ShaderVariantTool error #E10. "+
+                               "SVL.variantDatalist_AfterStrip.Count is "+SVL.variantDatalist_AfterStrip.Count+
+                               "but tool counted "+totalNormalShader.count_variant_after+".");
             }
 
             //Stripping and compile time
