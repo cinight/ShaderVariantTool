@@ -183,7 +183,14 @@ namespace GfxQA.ShaderVariantTool
                 }
             }
         }
-
+        
+        private bool IsKeywordDeclaration(string text)
+        {
+            if (text.Contains("multi_compile")) return true;
+            if (text.Contains("shader_feature")) return true;
+            if (text.Contains("dynamic_branch")) return true;
+            return false;
+        }
         private void GetDirectPragmaKeywordType(string shaderCode)
         {
             //Read shader code and find the #pragma lines
@@ -195,8 +202,22 @@ namespace GfxQA.ShaderVariantTool
                 KeywordSet ks = new KeywordSet();
                 ks.declareType = m.Groups[1].Value;
                 ks.keywords = m.Groups[2].Value.Split(' ');
+
+                if (IsKeywordDeclaration(ks.declareType))
+                {
+                    keywordSets.Add(ks);
+                    
+                    //Debug
+                    string d = ks.declareType + "\n";
+                    foreach(string k in ks.keywords)
+                    {
+                        d += k + "\n";
+                    }
+                    Debug.Log(d);
+                }
                 
-                keywordSets.Add(ks);
+                //TODO: the keyword list need to have an OFF keyword
+
             }
         }
     }
