@@ -144,7 +144,8 @@ namespace GfxQA.ShaderVariantTool
                     totalComputeShader.editorLog_variantAfterPrefilteringCount += si.editorLog_variantAfterPrefilteringCount;
                     totalComputeShader.editorLog_variantAfterBuiltinStrippingCount += si.editorLog_variantAfterBuiltinStrippingCount;
                     totalComputeShader.editorLog_variantAfterSciptableStrippingCount += si.editorLog_variantAfterSciptableStrippingCount;
-                    totalComputeShader.editorLog_variantMeshDataOptimization += si.editorLog_variantMeshDataOptimization;
+                    totalComputeShader.editorLog_variantMeshDataOptimizationCached += si.editorLog_variantMeshDataOptimizationCached;
+                    totalComputeShader.editorLog_variantMeshDataOptimizationCompiled += si.editorLog_variantMeshDataOptimizationCompiled;
                     totalComputeShader.editorLog_variantCompiledCount += si.editorLog_variantCompiledCount;
                     totalComputeShader.editorLog_variantInCache += si.editorLog_variantInCache;
                     totalComputeShader.editorLog_timeCompile += si.editorLog_timeCompile;
@@ -163,7 +164,8 @@ namespace GfxQA.ShaderVariantTool
                     totalNormalShader.editorLog_variantAfterPrefilteringCount += si.editorLog_variantAfterPrefilteringCount;
                     totalNormalShader.editorLog_variantAfterBuiltinStrippingCount += si.editorLog_variantAfterBuiltinStrippingCount;
                     totalNormalShader.editorLog_variantAfterSciptableStrippingCount += si.editorLog_variantAfterSciptableStrippingCount;
-                    totalNormalShader.editorLog_variantMeshDataOptimization += si.editorLog_variantMeshDataOptimization;
+                    totalNormalShader.editorLog_variantMeshDataOptimizationCached += si.editorLog_variantMeshDataOptimizationCached;
+                    totalNormalShader.editorLog_variantMeshDataOptimizationCompiled += si.editorLog_variantMeshDataOptimizationCompiled;
                     totalNormalShader.editorLog_variantCompiledCount += si.editorLog_variantCompiledCount;
                     totalNormalShader.editorLog_variantInCache += si.editorLog_variantInCache;
                     totalNormalShader.editorLog_timeCompile += si.editorLog_timeCompile;
@@ -186,19 +188,37 @@ namespace GfxQA.ShaderVariantTool
                     ". Check console to see if this shader has errors. And if you have [Optimize mesh data] enabled in Player Settings, this is normal to see this warning if you have modified shader keywords.");
                 }
                 //Bug check - in case the variants tracked in OnProcessShader VS reading EditorLog counts different result
-                if( si.count_variant_after != (si.editorLog_variantAfterSciptableStrippingCount + si.editorLog_variantMeshDataOptimization) )
+                if( si.count_variant_after != si.editorLog_variantAfterSciptableStrippingCount )
                 {
-                    Debug.LogError("ShaderVariantTool error #E01. "+si.name+" has different after scriptable stripping count. "+
-                    "Tool counted there are "+si.count_variant_after+" shader variants in build, "+
-                    "but Editor Log counted "+si.editorLog_variantAfterSciptableStrippingCount+". "+
-                    "Mesh data optimization count is "+si.editorLog_variantMeshDataOptimization+".");
+                    string debugMessage = "ShaderVariantTool error #E01. "+si.name+" has different count after scriptable stripping. "+
+                                          "Tool counted there are "+si.count_variant_after+" shader variants in build, "+
+                                          "but Editor Log counted "+si.editorLog_variantAfterSciptableStrippingCount+". "+
+                                          "Mesh data optimization count is "+si.editorLog_variantMeshDataOptimizationCached+"(cached) "+si.editorLog_variantMeshDataOptimizationCompiled+"(compiled). ";
+                    if (PlayerSettings.stripUnusedMeshComponents)
+                    {
+                        debugMessage += "This might due to [Optimize Mesh Data] is enabled in Player Settings. Some shader compilation is done and thus being tracked by the tool.";
+                        Debug.LogWarning(debugMessage);
+                    }
+                    else
+                    {
+                        Debug.LogError(debugMessage);
+                    }
                 }
-                if( si.count_variant_before != (si.editorLog_variantAfterBuiltinStrippingCount + si.editorLog_variantMeshDataOptimization) )
+                if( si.count_variant_before != si.editorLog_variantAfterBuiltinStrippingCount )
                 {
-                    Debug.LogError("ShaderVariantTool error #E02. "+si.name+" has different before scriptable stripping count. "+
-                    "Tool counted there are "+si.count_variant_before+" variants before striptable-stripping, "+
-                    "but Editor Log counted "+si.editorLog_variantAfterBuiltinStrippingCount+". "+
-                    "Mesh data optimization count is "+si.editorLog_variantMeshDataOptimization+".");
+                    string debugMessage = "ShaderVariantTool error #E02. "+si.name+" has different count before scriptable stripping. "+
+                                       "Tool counted there are "+si.count_variant_before+" variants before striptable-stripping, "+
+                                       "but Editor Log counted "+si.editorLog_variantAfterBuiltinStrippingCount+". "+
+                                       "Mesh data optimization count is "+si.editorLog_variantMeshDataOptimizationCached+"(cached) "+si.editorLog_variantMeshDataOptimizationCompiled+"(compiled). ";
+                    if (PlayerSettings.stripUnusedMeshComponents)
+                    {
+                        debugMessage += "This might due to [Optimize Mesh Data] is enabled in Player Settings. Some shader compilation is done and thus being tracked by the tool.";
+                        Debug.LogWarning(debugMessage);
+                    }
+                    else
+                    {
+                        Debug.LogError(debugMessage);
+                    }
                 }
             }
 
@@ -259,40 +279,29 @@ namespace GfxQA.ShaderVariantTool
             //Fill the table
             foreach(ShaderItem si in SVL.shaderlist)
             {
+                string[] shaderTableItemRow = new string[shaderTableHeaderRow.Count];
+                shaderTableItemRow[0] = si.name;
+                shaderTableItemRow[1] = si.editorLog_variantOriginalCount.ToString();
+                shaderTableItemRow[2] = si.editorLog_variantAfterPrefilteringCount.ToString();
+                shaderTableItemRow[3] = si.count_variant_before.ToString();
+                shaderTableItemRow[4] = si.count_variant_after.ToString();
+                shaderTableItemRow[5] = si.count_dynamicVariant_after.ToString();
+                shaderTableItemRow[6] = si.editorLog_variantInCache.ToString();
+                shaderTableItemRow[7] = si.editorLog_variantCompiledCount.ToString();
+                shaderTableItemRow[8] = Helper.TimeFormatString( si.editorLog_timeStripping );
+                shaderTableItemRow[9] = Helper.TimeFormatString( si.editorLog_timeCompile );
+                shaderTableItemRow[10] = si.isComputeShader.ToString();
+                
+                //Program count
                 if(si.isComputeShader)
                 {
-                    string[] shaderTableItemRow = new string[shaderTableHeaderRow.Count];
-                    shaderTableItemRow[0] = si.name;
-                    shaderTableItemRow[1] = "-1"; //Compute shader do not have Editor log original, prefilter counts
-                    shaderTableItemRow[2] = "-1";
-                    shaderTableItemRow[3] = si.count_variant_before.ToString();
-                    shaderTableItemRow[4] = si.count_variant_after.ToString();
-                    shaderTableItemRow[5] = si.count_dynamicVariant_after.ToString();
-                    shaderTableItemRow[6] = si.editorLog_variantInCache.ToString();
-                    shaderTableItemRow[7] = si.editorLog_variantCompiledCount.ToString();
-                    shaderTableItemRow[8] = Helper.TimeFormatString( si.editorLog_timeStripping );
-                    shaderTableItemRow[9] = Helper.TimeFormatString( si.editorLog_timeCompile );
-                    shaderTableItemRow[10] = "True";
                     for(int k=11; k<shaderTableHeaderRow.Count; k++)
                     {
                         shaderTableItemRow[k] = "N/A";
                     }
-                    outputRows.Add(shaderTableItemRow);
                 }
                 else
                 {
-                    string[] shaderTableItemRow = new string[shaderTableHeaderRow.Count];
-                    shaderTableItemRow[0] = si.name;
-                    shaderTableItemRow[1] = si.editorLog_variantOriginalCount.ToString();
-                    shaderTableItemRow[2] = si.editorLog_variantAfterPrefilteringCount.ToString();
-                    shaderTableItemRow[3] = si.editorLog_variantAfterBuiltinStrippingCount.ToString();
-                    shaderTableItemRow[4] = si.editorLog_variantAfterSciptableStrippingCount.ToString();
-                    shaderTableItemRow[5] = si.count_dynamicVariant_after.ToString();
-                    shaderTableItemRow[6] = si.editorLog_variantInCache.ToString();
-                    shaderTableItemRow[7] = si.editorLog_variantCompiledCount.ToString();
-                    shaderTableItemRow[8] = Helper.TimeFormatString( si.editorLog_timeStripping );
-                    shaderTableItemRow[9] = Helper.TimeFormatString( si.editorLog_timeCompile );
-                    shaderTableItemRow[10] = "False";
                     foreach(ShaderProgram pgm in si.programs)
                     {
                         int shaderTableColumnId = shaderTableHeaderRow.FindIndex(e => e == "Program Count "+pgm.gfxAPI);
@@ -301,8 +310,9 @@ namespace GfxQA.ShaderVariantTool
                             shaderTableItemRow[shaderTableColumnId] = "internal: "+pgm.count_internal+" | "+"unique: "+pgm.count_unique;
                         }
                     }
-                    outputRows.Add(shaderTableItemRow);
                 }
+                
+                outputRows.Add(shaderTableItemRow);
             }
             outputRows.Add( new string[] { "" } );
 
@@ -390,7 +400,11 @@ namespace GfxQA.ShaderVariantTool
                 }
                 while (!endFound)
                 {
-                    if(!currentLine.Contains("Compiling shader ") && !currentLine.Contains("Compiling mesh data optimization processing for"))
+                    if(
+                        !currentLine.Contains("Compiling shader ") && 
+                        !currentLine.Contains("Compiling mesh data optimization processing for") && 
+                        !currentLine.Contains("Compiling compute shader ")
+                        )
                     {
                         currentLine = sr.ReadLine();
                     }
@@ -412,27 +426,135 @@ namespace GfxQA.ShaderVariantTool
                             
                             currentLine = sr.ReadLine();
                             
+                            while(!currentLine.Contains("Cached mesh channel usage data found for "))
+                            {
+                                currentLine = sr.ReadLine();
+                            }
+                            
                             //Variant count for mesh data optimization
-                            //UInt64 cachedMeshDataOptimizationVariantInt = 0;
+                            UInt64 cachedMeshDataOptimizationVariantInt = 0;
                             UInt64 compiledMeshDataOptimizationVariantInt = 0;
                             if(currentLine.Contains("Cached mesh channel usage data found for "))
                             {
-                                //Cached - we don't care
-                                //string variantCount = Helper.ExtractString(currentLine, "Cached mesh channel usage data found for " , " variants. " );
-                                //variantCount = variantCount.Replace(" ","");
-                                //cachedMeshDataOptimizationVariantInt = UInt64.Parse(variantCount);
+                                //Cached
+                                string cachedVariantCount = Helper.ExtractString(currentLine, "Cached mesh channel usage data found for " , " variants. " );
+                                cachedVariantCount = cachedVariantCount.Replace(" ","");
+                                cachedMeshDataOptimizationVariantInt = UInt64.Parse(cachedVariantCount);
                                 
                                 //Compiled
-                                string variantCount = Helper.ExtractString(currentLine, " variants. " , " variants require compilation to get this data." );
-                                variantCount = variantCount.Replace(" ","");
-                                compiledMeshDataOptimizationVariantInt = UInt64.Parse(variantCount);
+                                string compiledVariantCount = Helper.ExtractString(currentLine, " variants. " , " variants require compilation to get this data." );
+                                compiledVariantCount = compiledVariantCount.Replace(" ","");
+                                compiledMeshDataOptimizationVariantInt = UInt64.Parse(compiledVariantCount);
                                 
                                 //---------- Log ShaderItem ------------//
                                 ShaderItem shaderItem = GetOrCreateShaderItem(shaderName);
-                                shaderItem.editorLog_variantMeshDataOptimization += compiledMeshDataOptimizationVariantInt;
+                                shaderItem.editorLog_variantMeshDataOptimizationCached += cachedMeshDataOptimizationVariantInt;
+                                shaderItem.editorLog_variantMeshDataOptimizationCompiled += compiledMeshDataOptimizationVariantInt;
                             }
                         }
+                        
+                        /* Compute shader:
+                        Compiling compute shader "StpSetup"
+                        starting stripping...
+                        finished in 0.30 seconds. 64 of 64 variants left
+                        64 variants, starting compilation...
+                        finished in 1.43 seconds. Local cache hits 0, remote cache hits 0, compiled 64 variants
+                         */
+                        if (currentLine.Contains("Compiling compute shader "))
+                        {
+                            //Shader name
+                            string shaderName = Helper.ExtractString(currentLine, "Compiling compute shader " , "" );
+                            shaderName = shaderName.Replace("\"","");
+                            
+                            currentLine = sr.ReadLine();
+                            currentLine = sr.ReadLine();
+                            
+                            //stripping time
+                            string strippingTime = Helper.ExtractString(currentLine, "finished in " , " seconds. " );
+                            
+                            //Original variant count
+                            UInt64 totalVariantInt = 0;
+                            string totalVariant = Helper.ExtractString(currentLine, " of " , " variants left" );
+                            totalVariant = totalVariant.Replace(" ","");
+                            totalVariantInt = UInt64.Parse(totalVariant);
+                            
+                            //Remaining variant count
+                            UInt64 remainingVariantInt = 0;
+                            string remainingVariant = Helper.ExtractString(currentLine, " seconds. " , " of " );
+                            remainingVariant = remainingVariant.Replace(" ","");
+                            remainingVariantInt = UInt64.Parse(remainingVariant);
 
+                            //compilation time and compiled variant count (time is faster if there are cached variants)
+                            string startString = "";
+                            string endString = "";
+                            string compileTime = "0.00";
+                            string compiledVariants = "0";
+                            string localCache = "0";
+                            string remoteCache = "0";
+                            //string skippedVariants = "0";
+                            
+                            if (remainingVariantInt > 0)
+                            {
+                                currentLine = sr.ReadLine();
+                                currentLine = sr.ReadLine();
+                                string remainingText = currentLine;
+                                
+                                //Compile time
+                                startString = "finished in ";
+                                endString = " seconds. ";
+                                compileTime = Helper.ExtractString(remainingText,startString,endString,true);
+                                compileTime = compileTime.Replace(" ","");
+                                //remainingText = Helper.GetRemainingString(remainingText,endString);
+
+                                //Local cache hit
+                                startString = "Local cache hits ";
+                                endString = ", remote cache hits";
+                                localCache = Helper.ExtractString(remainingText,startString,endString,true);
+                                localCache = localCache.Replace(" ","");
+                                //remainingText = Helper.GetRemainingString(remainingText,endString);
+
+                                //Remote cache hit
+                                startString = "remote cache hits ";
+                                endString = ", compiled ";
+                                remoteCache = Helper.ExtractString(remainingText,startString,endString,true);
+                                remoteCache = remoteCache.Replace(" ","");
+                                //remainingText = Helper.GetRemainingString(remainingText,endString);
+
+                                //Compiled variants
+                                startString = ", compiled ";
+                                endString = " variants";
+                                compiledVariants = Helper.ExtractString(remainingText,startString,endString,true);
+                                compiledVariants = compiledVariants.Replace(" ","");
+                                //remainingText = Helper.GetRemainingString(remainingText,endString);
+
+                                //Skipped variants
+                                //startString = " skipped ";
+                                //endString = " variants";
+                                //skippedVariants = Helper.ExtractString(remainingText,startString,endString,false);
+                                //skippedVariants = skippedVariants.Replace(" ","");
+                                //remainingText = Helper.GetRemainingString(remainingText,endString);
+                            }
+                            
+                            uint compiledVariantsInt = uint.Parse(compiledVariants);
+                            uint localCacheInt = uint.Parse(localCache);
+                            uint remoteCacheInt = uint.Parse(remoteCache);
+                            // skippedVariantsInt = uint.Parse(skippedVariants);
+                            float strippingTimeFloat = float.Parse(strippingTime);
+                            float compileTimeFloat = float.Parse(compileTime);
+                            
+                            //---------- Log ShaderItem ------------//
+                            ShaderItem shaderItem = GetOrCreateShaderItem(shaderName);
+                            shaderItem.editorLog_variantOriginalCount += totalVariantInt;
+                            shaderItem.editorLog_variantAfterPrefilteringCount += totalVariantInt; //for compute, this is still the original variant count
+                            shaderItem.editorLog_variantAfterBuiltinStrippingCount += totalVariantInt; //for compute, this is still the original variant count
+                            shaderItem.editorLog_variantAfterSciptableStrippingCount += remainingVariantInt;
+                            shaderItem.editorLog_variantCompiledCount += compiledVariantsInt;
+                            shaderItem.editorLog_variantInCache += localCacheInt+remoteCacheInt;
+                            shaderItem.editorLog_timeStripping += strippingTimeFloat;
+                            shaderItem.editorLog_timeCompile += compileTimeFloat;
+                        }
+                        
+                        //Normal shader
                         if(currentLine.Contains("Compiling shader "))
                         {
                             //Shader name
