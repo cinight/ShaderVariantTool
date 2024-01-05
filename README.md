@@ -1,8 +1,6 @@
 # ShaderVariantTool
 This tool lists out all shader keywords and variant counts that are being included in player build and before stripping. \
 Expand a shader and see it's keyword table. e.g. If a shader keyword is being completely stripped, the Comiled Count for that keyword should be 0 in the after scriptable stripping column.
-\
-\
 
 ### How to install:
 1. On Unity Editor > Window > Package Manager
