@@ -3,14 +3,14 @@ This tool lists out all shader keywords and variant counts that are being includ
 Expand a shader and see it's keyword table. e.g. If a shader keyword is being completely stripped, the Comiled Count for that keyword should be 0 in the after scriptable stripping column.
 \
 \
-Unity 2022.2.6f1+
 
 ### How to install:
 1. On Unity Editor > Window > Package Manager
 2. On top left, click "+"
 3. Select "Add package from git URL..."
 4. Copy and paste:
-   - For Unity **2022.2.6f1+**: `https://github.com/cinight/ShaderVariantTool.git`
+   - For Unity **2023.3.0b2+**: `https://github.com/cinight/ShaderVariantTool.git`
+   - For Unity **2022.2.6f1+**: `https://github.com/cinight/ShaderVariantTool.git#2022.2`
    - For Unity **2021.3.18f1+**: `https://github.com/cinight/ShaderVariantTool.git#2021.3`
 5. Click Add
 6. OR you can edit Packages/manifest.json and add <br>`"com.cinight.shader-variant-tool": "https://github.com/cinight/ShaderVariantTool.git",`

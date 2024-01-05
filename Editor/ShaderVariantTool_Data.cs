@@ -43,6 +43,7 @@ namespace GfxQA.ShaderVariantTool
         public UInt64 editorLog_variantAfterPrefilteringCount = 0;
         public UInt64 editorLog_variantAfterBuiltinStrippingCount = 0;
         public UInt64 editorLog_variantAfterSciptableStrippingCount = 0;
+        public UInt64 editorLog_variantMeshDataOptimization = 0;
         public uint editorLog_variantCompiledCount = 0;
         public uint editorLog_variantInCache = 0;
         public float editorLog_timeCompile = 0;

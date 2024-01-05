@@ -144,6 +144,7 @@ namespace GfxQA.ShaderVariantTool
                     totalComputeShader.editorLog_variantAfterPrefilteringCount += si.editorLog_variantAfterPrefilteringCount;
                     totalComputeShader.editorLog_variantAfterBuiltinStrippingCount += si.editorLog_variantAfterBuiltinStrippingCount;
                     totalComputeShader.editorLog_variantAfterSciptableStrippingCount += si.editorLog_variantAfterSciptableStrippingCount;
+                    totalComputeShader.editorLog_variantMeshDataOptimization += si.editorLog_variantMeshDataOptimization;
                     totalComputeShader.editorLog_variantCompiledCount += si.editorLog_variantCompiledCount;
                     totalComputeShader.editorLog_variantInCache += si.editorLog_variantInCache;
                     totalComputeShader.editorLog_timeCompile += si.editorLog_timeCompile;
@@ -162,6 +163,7 @@ namespace GfxQA.ShaderVariantTool
                     totalNormalShader.editorLog_variantAfterPrefilteringCount += si.editorLog_variantAfterPrefilteringCount;
                     totalNormalShader.editorLog_variantAfterBuiltinStrippingCount += si.editorLog_variantAfterBuiltinStrippingCount;
                     totalNormalShader.editorLog_variantAfterSciptableStrippingCount += si.editorLog_variantAfterSciptableStrippingCount;
+                    totalNormalShader.editorLog_variantMeshDataOptimization += si.editorLog_variantMeshDataOptimization;
                     totalNormalShader.editorLog_variantCompiledCount += si.editorLog_variantCompiledCount;
                     totalNormalShader.editorLog_variantInCache += si.editorLog_variantInCache;
                     totalNormalShader.editorLog_timeCompile += si.editorLog_timeCompile;
@@ -183,20 +185,21 @@ namespace GfxQA.ShaderVariantTool
                     " variants after ScriptableStripping, but Internal Program Count is not having same number: "+shaderInternalProgramCount+
                     ". Check console to see if this shader has errors. And if you have [Optimize mesh data] enabled in Player Settings, this is normal to see this warning if you have modified shader keywords.");
                 }
-            }
-
-            //Bug check - in case the variants tracked in OnProcessShader VS reading EditorLog counts different result
-            if( totalNormalShader.count_variant_after != totalNormalShader.editorLog_variantAfterSciptableStrippingCount )
-            {
-                Debug.LogError("ShaderVariantTool error #E01. "+
-                "Tool counted there are "+totalNormalShader.count_variant_after+" shader variants in build, "+
-                "but Editor Log counted "+totalNormalShader.editorLog_variantAfterSciptableStrippingCount+".");
-            }
-            if( totalNormalShader.count_variant_before != totalNormalShader.editorLog_variantAfterBuiltinStrippingCount )
-            {
-                Debug.LogError("ShaderVariantTool error #E02. "+
-                "Tool counted there are "+totalNormalShader.count_variant_before+" variants before striptable-stripping, "+
-                "but Editor Log counted "+totalNormalShader.editorLog_variantAfterBuiltinStrippingCount+".");
+                //Bug check - in case the variants tracked in OnProcessShader VS reading EditorLog counts different result
+                if( si.count_variant_after != (si.editorLog_variantAfterSciptableStrippingCount + si.editorLog_variantMeshDataOptimization) )
+                {
+                    Debug.LogError("ShaderVariantTool error #E01. "+si.name+" has different after scriptable stripping count. "+
+                    "Tool counted there are "+si.count_variant_after+" shader variants in build, "+
+                    "but Editor Log counted "+si.editorLog_variantAfterSciptableStrippingCount+". "+
+                    "Mesh data optimization count is "+si.editorLog_variantMeshDataOptimization+".");
+                }
+                if( si.count_variant_before != (si.editorLog_variantAfterBuiltinStrippingCount + si.editorLog_variantMeshDataOptimization) )
+                {
+                    Debug.LogError("ShaderVariantTool error #E02. "+si.name+" has different before scriptable stripping count. "+
+                    "Tool counted there are "+si.count_variant_before+" variants before striptable-stripping, "+
+                    "but Editor Log counted "+si.editorLog_variantAfterBuiltinStrippingCount+". "+
+                    "Mesh data optimization count is "+si.editorLog_variantMeshDataOptimization+".");
+                }
             }
 
             //Stripping and compile time
@@ -387,7 +390,7 @@ namespace GfxQA.ShaderVariantTool
                 }
                 while (!endFound)
                 {
-                    if(!currentLine.Contains("Compiling shader "))
+                    if(!currentLine.Contains("Compiling shader ") && !currentLine.Contains("Compiling mesh data optimization processing for"))
                     {
                         currentLine = sr.ReadLine();
                     }
@@ -398,6 +401,38 @@ namespace GfxQA.ShaderVariantTool
                     }
                     else
                     {
+                        //Added in 2023.3.0b2
+                        //Compiling mesh data optimization processing for "Test/ShaderKeywordTest" pass "":
+                        //Cached mesh channel usage data found for 2 variants. 0 variants require compilation to get this data.
+                        if (currentLine.Contains("Compiling mesh data optimization processing for"))
+                        {
+                            //Shader name
+                            string shaderName = Helper.ExtractString(currentLine, "Compiling mesh data optimization processing for " , " pass " );
+                            shaderName = shaderName.Replace("\"","");
+                            
+                            currentLine = sr.ReadLine();
+                            
+                            //Variant count for mesh data optimization
+                            //UInt64 cachedMeshDataOptimizationVariantInt = 0;
+                            UInt64 compiledMeshDataOptimizationVariantInt = 0;
+                            if(currentLine.Contains("Cached mesh channel usage data found for "))
+                            {
+                                //Cached - we don't care
+                                //string variantCount = Helper.ExtractString(currentLine, "Cached mesh channel usage data found for " , " variants. " );
+                                //variantCount = variantCount.Replace(" ","");
+                                //cachedMeshDataOptimizationVariantInt = UInt64.Parse(variantCount);
+                                
+                                //Compiled
+                                string variantCount = Helper.ExtractString(currentLine, " variants. " , " variants require compilation to get this data." );
+                                variantCount = variantCount.Replace(" ","");
+                                compiledMeshDataOptimizationVariantInt = UInt64.Parse(variantCount);
+                                
+                                //---------- Log ShaderItem ------------//
+                                ShaderItem shaderItem = GetOrCreateShaderItem(shaderName);
+                                shaderItem.editorLog_variantMeshDataOptimization += compiledMeshDataOptimizationVariantInt;
+                            }
+                        }
+
                         if(currentLine.Contains("Compiling shader "))
                         {
                             //Shader name
@@ -558,20 +593,7 @@ namespace GfxQA.ShaderVariantTool
                             float compileTimeFloat = float.Parse(compileTime);
 
                             //---------- Log ShaderItem ------------//
-                            int shaderItemId = SVL.shaderlist.FindIndex( o=> o.name == shaderName );
-                            ShaderItem shaderItem;
-                            if( shaderItemId == -1 )
-                            {
-                                //Make new ShaderItem
-                                shaderItem = new ShaderItem();
-                                shaderItem.name = shaderName;
-                                SVL.shaderlist.Add(shaderItem);
-                            }
-                            else
-                            {
-                                //Get existing ShaderItem
-                                shaderItem = SVL.shaderlist[shaderItemId];
-                            }
+                            ShaderItem shaderItem = GetOrCreateShaderItem(shaderName);
                             shaderItem.editorLog_variantOriginalCount += totalVariantInt;
                             shaderItem.editorLog_variantAfterPrefilteringCount += prefilteredVariantInt;
                             shaderItem.editorLog_variantAfterBuiltinStrippingCount += builtinStrippedVariantInt;
@@ -645,6 +667,26 @@ namespace GfxQA.ShaderVariantTool
                 "The sum of shader variants cached + compiled + skipped ("+variantCacheAndCompiledSum+") is not equal to the sum of remaning variants ("+
                 sum_variantCountinBuild+") in EditorLog. Please contact @mingwai on slack. This could be related to exisiting known issue: Case 1389276");
             }
+        }
+        
+        private static ShaderItem GetOrCreateShaderItem(string shaderName)
+        {
+            int shaderItemId = SVL.shaderlist.FindIndex( o=> o.name == shaderName );
+            ShaderItem shaderItem;
+            if( shaderItemId == -1 )
+            {
+                //Make new ShaderItem
+                shaderItem = new ShaderItem();
+                shaderItem.name = shaderName;
+                SVL.shaderlist.Add(shaderItem);
+            }
+            else
+            {
+                //Get existing ShaderItem
+                shaderItem = SVL.shaderlist[shaderItemId];
+            }
+
+            return shaderItem;
         }
     }
 }
