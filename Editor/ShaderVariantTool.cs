@@ -99,7 +99,8 @@ namespace GfxQA.ShaderVariantTool
             showInExplorerButton.RegisterCallback<PointerUpEvent>(e =>
             {
                 string path = selectedCSVFile;
-                EditorUtility.RevealInFinder(path.Replace(@"/", @"\"));
+                path = path.Replace(@"\", @"/");
+                EditorUtility.RevealInFinder(path);
             });
 
             //Build summary ================================================================
@@ -232,7 +233,9 @@ namespace GfxQA.ShaderVariantTool
             {
                 if(file.Name.Contains("ShaderVariants_") && file.FullName.Contains(".csv"))
                 {
-                    CSVFileNames.Add(file.FullName);
+                    string path = file.FullName;
+                    path = path.Replace(@"/", @"\");
+                    CSVFileNames.Add(path);
                 }
             }
 
@@ -242,7 +245,9 @@ namespace GfxQA.ShaderVariantTool
 
         private string[] ReadCSVFile()
         {
-            string fileData  = System.IO.File.ReadAllText(selectedCSVFile);
+            string path = selectedCSVFile;
+            path = path.Replace(@"\", @"/");
+            string fileData  = System.IO.File.ReadAllText(path);
             string[] lines = fileData.Split("\n"[0]);
             return lines;
         }
