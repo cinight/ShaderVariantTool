@@ -13,6 +13,7 @@ namespace GfxQA.ShaderVariantTool
     {
         private VisualElement root;
         private ScrollView mainScrollView;
+        private Toggle logToggle;
 
         [MenuItem("Window/ShaderVariantTool")]
         public static void ShowWindow()
@@ -21,11 +22,35 @@ namespace GfxQA.ShaderVariantTool
             ShaderVariantTool wnd = CreateWindow<ShaderVariantTool>(); //Allow to create more instances
             wnd.titleContent = new GUIContent("ShaderVariantTool");
             wnd.minSize = new Vector2(800, 700);
+            
+            //initiate log toggle value
+            Helper.shouldUpdateLogNextBuildGUI = true;
+        }
+
+        public void OnGUI()
+        {
+            //Update log toggle
+            Helper.InitiateLogNextBuild();
+            logToggle.value = SVL.logNextBuild;
         }
 
         public void CreateGUI()
         {
             root = rootVisualElement;
+            
+            //Getting main layout
+            VisualTreeAsset rootVisualTree = Resources.Load<VisualTreeAsset>("ShaderVariantTool_Main");
+            rootVisualTree.CloneTree(root);
+            mainScrollView = root.Q<ScrollView>();
+            
+            //Log toggle ==================================================================
+            logToggle = root.Q<Toggle>(name:"LogToggle");
+            logToggle.RegisterValueChangedCallback(v =>
+            {
+                Helper.SetLogNextBuild(v.newValue);
+            });
+            
+            //Message when no CSV found ==================================================================
 
             //If there is no CSV file available, show an message to hint people to make a build first
             if(CSVFileNames == null) GetCSVFileNames();
@@ -37,13 +62,6 @@ namespace GfxQA.ShaderVariantTool
                 root.Add(initialMessage);
                 return;
             }
-
-            //Culture Setting ==================================================================
-
-            //Getting main layout
-            VisualTreeAsset rootVisualTree = Resources.Load<VisualTreeAsset>("ShaderVariantTool_Main");
-            rootVisualTree.CloneTree(root);
-            mainScrollView = root.Q<ScrollView>();
 
             //Culture Setting ==================================================================
 
@@ -815,6 +833,9 @@ namespace GfxQA.ShaderVariantTool
     //===================================================================================================
     public static class SVL
     {
+        public static bool logNextBuild = true;
+        
+        
         //build process indicators
         public static string buildProcessIDTitleStart = "ShaderVariantTool_Start:";
         public static string buildProcessIDTitleEnd = "ShaderVariantTool_End:";
@@ -823,6 +844,8 @@ namespace GfxQA.ShaderVariantTool
 
         //the big total
         public static double buildTime = 0;
+        public static double timeSpentByTool = 0;
+        public const string timeSpentByToolTitle = "*Spent by this tool";
         
         //data
         public static List<ShaderItem> shaderlist = new List<ShaderItem>();
@@ -853,6 +876,7 @@ namespace GfxQA.ShaderVariantTool
 
                 shaderlist.Clear();
                 buildTime = 0;
+                timeSpentByTool = 0;
 
                 //For reading EditorLog, we can extract the contents
                 buildProcessID = System.DateTime.Now.ToString("yyyyMMdd_HH-mm-ss");

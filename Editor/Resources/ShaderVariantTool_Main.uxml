@@ -2,7 +2,12 @@
     <Style src="ShaderVariantTool_Style.uss" />
     <ui:ScrollView name="scrollView">
         <ui:VisualElement class="master-content-container">
-
+            
+            <!-- Logging Toggle -->
+            <ui:VisualElement name="LogToggleSetting">
+                <ui:Toggle name="LogToggle" label="Log next build" index="0" />
+            </ui:VisualElement>
+            
             <!-- Culture setting -->
             <ui:VisualElement name="CultureSetting">
                 <ui:DropdownField name="CultureField" label="culture" index="0" />

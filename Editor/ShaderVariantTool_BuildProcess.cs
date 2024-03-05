@@ -32,6 +32,11 @@ namespace GfxQA.ShaderVariantTool
 
         public void OnPreprocessBuild(BuildReport report)
         {
+            Helper.LogNextBuildPopup();
+            if (!SVL.logNextBuild) return;
+            
+            double timeSpent = EditorApplication.timeSinceStartup;
+            
             //This should be always on
             ShaderVariantTool_BuildPreprocess.deletePlayerCacheBeforeBuild = true;
             DeletePlayerCacheBeforeBuild();
@@ -39,6 +44,11 @@ namespace GfxQA.ShaderVariantTool
             //IPreprocessShaders happens before IPreprocessBuildWithReport, 
             //so doing the initial time logging in ShaderVariantTool_ShaderPreprocess instead
             SVL.ResetBuildList();
+            
+            // Log time
+            timeSpent = EditorApplication.timeSinceStartup - timeSpent;
+            //Debug.Log("OnPreprocessBuild = "+Helper.TimeFormatString(timeSpent));
+            SVL.timeSpentByTool += timeSpent;
         }
     }
 
@@ -49,6 +59,10 @@ namespace GfxQA.ShaderVariantTool
 
         public void OnPostprocessBuild(BuildReport report)
         {
+            if (!SVL.logNextBuild) return;
+            
+            double timeSpent = EditorApplication.timeSinceStartup;
+            
             //For reading EditorLog, we can extract the contents
             Debug.LogFormat(LogType.Log, LogOption.NoStacktrace, null, SVL.buildProcessIDTitleEnd+SVL.buildProcessID);
 
@@ -69,6 +83,11 @@ namespace GfxQA.ShaderVariantTool
             Debug.Log("Build is done and ShaderVariantTool has done gathering data. Find the details on Windows > ShaderVariantTool, or look at the generated CSV report at: "+savedFile);
 
             SVL.buildProcessStarted = false;
+            
+            // Log time (this time value is not included in the CSV as it happens after writing the CSV file)
+            timeSpent = EditorApplication.timeSinceStartup - timeSpent;
+            //Debug.Log("OnPostprocessBuild = "+Helper.TimeFormatString(timeSpent));
+            SVL.timeSpentByTool += timeSpent;
         }
 
         public static List<string[]> WriteCSVFile(BuildReport report, string editorLogPath, string startTimeStamp)
@@ -222,11 +241,22 @@ namespace GfxQA.ShaderVariantTool
                 }
             }
 
-            //Stripping and compile time
+            //Stripping time
             string strippingTimeString = Helper.TimeFormatString(totalNormalShader.editorLog_timeStripping);
-            string compileTimeString = Helper.TimeFormatString(totalNormalShader.editorLog_timeCompile);
             outputRows.Add( new string[] { "- Stripping Time" , strippingTimeString } );
+            
+            //Time spent by the tool (list under stripping time)
+            string timeSpentByToolString = Helper.TimeFormatString(SVL.timeSpentByTool);
+            outputRows.Add( new string[] { "ㅤ"+SVL.timeSpentByToolTitle , timeSpentByToolString } );
+            
+            //Compile time
+            string compileTimeString = Helper.TimeFormatString(totalNormalShader.editorLog_timeCompile);
             outputRows.Add( new string[] { "- Compilation Time" , compileTimeString } );
+            
+            //Build time without impact of the tool
+            double builtTimeNoImpact = SVL.buildTime - SVL.timeSpentByTool;
+            string builtTimeNoImpactString = Helper.TimeFormatString(builtTimeNoImpact);
+            outputRows.Add( new string[] { "Build Time minus time spent by tool" , builtTimeNoImpactString } );
 
             //Shader counts
             outputRows.Add( new string[] { "Shader Count" , totalNormalShaderCount.ToString() } );

@@ -18,6 +18,10 @@ namespace GfxQA.ShaderVariantTool
 
         public void OnProcessComputeShader(ComputeShader shader, string kernelName, IList<ShaderCompilerData> data)
         {
+            if (!SVL.logNextBuild) return;
+            
+            double timeSpent = EditorApplication.timeSinceStartup;
+            
             //Log ShaderItem
             int shaderItemId = SVL.shaderlist.FindIndex( o=> o.name == shader.name );
             ShaderItem shaderItem;
@@ -69,7 +73,11 @@ namespace GfxQA.ShaderVariantTool
                     }
                 }
             }
-
+            
+            // Log time
+            timeSpent = EditorApplication.timeSinceStartup - timeSpent;
+            //Debug.Log("OnProcessComputeShader (Before) = "+Helper.TimeFormatString(timeSpent));
+            SVL.timeSpentByTool += timeSpent;
         }
     }
 
@@ -79,6 +87,10 @@ namespace GfxQA.ShaderVariantTool
 
         public void OnProcessComputeShader(ComputeShader shader, string kernelName, IList<ShaderCompilerData> data)
         {
+            if (!SVL.logNextBuild) return;
+            
+            double timeSpent = EditorApplication.timeSinceStartup;
+            
             //Get existing ShaderItem
             int shaderItemId = SVL.shaderlist.FindIndex( o=> o.name == shader.name );
             ShaderItem shaderItem = SVL.shaderlist[shaderItemId];
@@ -116,6 +128,11 @@ namespace GfxQA.ShaderVariantTool
                     }
                 }
             }
+            
+            // Log time
+            timeSpent = EditorApplication.timeSinceStartup - timeSpent;
+            //Debug.Log("OnProcessComputeShader (After) = "+Helper.TimeFormatString(timeSpent));
+            SVL.timeSpentByTool += timeSpent;
         }
     }
 

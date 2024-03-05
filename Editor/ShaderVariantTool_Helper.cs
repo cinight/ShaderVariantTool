@@ -16,10 +16,48 @@ namespace GfxQA.ShaderVariantTool
             return Application.dataPath.Replace("/Assets","/");
         }
 
+
+        private static string logNextBuildPopupPref = "ShaderVariantTool_LogNextBuildPopup";
+        private static DialogOptOutDecisionType dialogOptOutDecisionType = DialogOptOutDecisionType.ForThisSession;
+        public const string logNextBuildPref = "ShaderVariantTool_LogNextBuild";
+        public static bool shouldUpdateLogNextBuildGUI = true;
+        public static void LogNextBuildPopup()
+        {
+            if(EditorUtility.GetDialogOptOutDecision(dialogOptOutDecisionType, logNextBuildPopupPref)) return;
+            
+            string title = "ShaderVariantTool - Log next build?";
+            string message = "If enabled, the tool lengthen shader stripping time. The impact will be listed on the tool under shader stripping time after building.\n\n" +
+                             "You can also configure in Window > ShaderVariantTool > [Log Next Build].";
+            bool enable = EditorUtility.DisplayDialog
+            (
+                title,message,
+                "Enable",
+                "Disable",
+                dialogOptOutDecisionType,
+                logNextBuildPopupPref
+            );
+            
+            SetLogNextBuild(enable);
+        }
+        
+        public static void InitiateLogNextBuild()
+        {
+            if (!shouldUpdateLogNextBuildGUI) return;
+            bool logPref = SessionState.GetBool(logNextBuildPref,true);
+            SVL.logNextBuild = logPref;
+            shouldUpdateLogNextBuildGUI = false;
+        }
+        
+        public static void SetLogNextBuild(bool v)
+        {
+            SessionState.SetBool(logNextBuildPref, v);
+            SVL.logNextBuild = v;
+            shouldUpdateLogNextBuildGUI = true;
+        }
+
         private static string culturePref = "ShaderVariantTool_Culture";
         public static CultureInfo culture;
         public static CultureInfo[] cinfo;
-
         public static void SetupCultureInfo()
         {
             if(cinfo == null) cinfo = CultureInfo.GetCultures(CultureTypes.AllCultures & ~CultureTypes.NeutralCultures);
@@ -67,12 +105,13 @@ namespace GfxQA.ShaderVariantTool
             t -= minute*60f;
 
             float second = t;
+            string secondString = minute > 0 ? Mathf.RoundToInt(second).ToString() : second.ToString("0.00");
 
             string timeString = "";
 
             if(hour > 0) timeString += hour + "hr ";
             if(minute > 0) timeString += minute + "m ";
-            timeString += NumberSeperator(second.ToString()) + "s";
+            timeString += NumberSeperator(secondString) + "s";
 
             return timeString;
         }
