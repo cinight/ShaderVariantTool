@@ -5,6 +5,7 @@ using UnityEngine.Rendering;
 using System;
 using System.IO;
 using System.Globalization;
+using System.Text;
 using UnityEditor;
 
 namespace GfxQA.ShaderVariantTool
@@ -107,13 +108,12 @@ namespace GfxQA.ShaderVariantTool
             float second = t;
             string secondString = minute > 0 ? Mathf.RoundToInt(second).ToString() : second.ToString("0.00");
 
-            string timeString = "";
+            StringBuilder timeString = new StringBuilder();
+            if(hour > 0) timeString.Append(String.Concat(hour , "hr "));
+            if(minute > 0) timeString.Append(String.Concat(minute , "m "));
+            timeString.Append(string.Concat(NumberSeperator(secondString) , "s"));
 
-            if(hour > 0) timeString += hour + "hr ";
-            if(minute > 0) timeString += minute + "m ";
-            timeString += NumberSeperator(secondString) + "s";
-
-            return timeString;
+            return timeString.ToString();
         }
 
         public static string GetRemainingString(string line, string from)
@@ -153,17 +153,17 @@ namespace GfxQA.ShaderVariantTool
 
         public static string GetPlatformKeywordList(PlatformKeywordSet pks)
         {
-            string enabledPKeys = "";
+            StringBuilder enabledPKeys = new StringBuilder();
             foreach(BuiltinShaderDefine sd in System.Enum.GetValues(typeof(BuiltinShaderDefine))) 
             {
                 //Only pay attention to SHADER_API_MOBILE, SHADER_API_DESKTOP and SHADER_API_GLES30
                 if( sd.ToString().Contains("SHADER_API") && pks.IsEnabled(sd) )
                 {
-                    if(enabledPKeys != "") enabledPKeys += " ";
-                    enabledPKeys += sd.ToString();
+                    if(enabledPKeys.Length>0) enabledPKeys.Append(" ");
+                    enabledPKeys.Append(sd.ToString());
                 }
             }
-            return enabledPKeys;
+            return enabledPKeys.ToString();
         }
 
         public static string GetEditorLogPath()
@@ -171,8 +171,8 @@ namespace GfxQA.ShaderVariantTool
             string editorLogPath = "";
             switch(Application.platform)
             {
-                case RuntimePlatform.WindowsEditor: editorLogPath=Environment.GetEnvironmentVariable("AppData").Replace("Roaming","")+"Local\\Unity\\Editor\\Editor.log"; break;
-                case RuntimePlatform.OSXEditor: editorLogPath=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library")+"/Logs/Unity/Editor.log"; break;
+                case RuntimePlatform.WindowsEditor: editorLogPath=String.Concat(Environment.GetEnvironmentVariable("AppData").Replace("Roaming",""),"Local\\Unity\\Editor\\Editor.log"); break;
+                case RuntimePlatform.OSXEditor: editorLogPath=String.Concat(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library"),"/Logs/Unity/Editor.log"); break;
                 case RuntimePlatform.LinuxEditor: editorLogPath="~/.config/unity3d/Editor.log"; break;
             }
             return editorLogPath;

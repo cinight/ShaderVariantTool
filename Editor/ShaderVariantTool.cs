@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using System;
 using System.IO;
-using System.Globalization;
+using System.Text;
 
 namespace GfxQA.ShaderVariantTool
 {
@@ -139,26 +139,26 @@ namespace GfxQA.ShaderVariantTool
         private void RefreshUI()
         {
             //Print the opened file name
-            openedFileLabel.text = "Opened CSV file:" + selectedCSVFile;
+            openedFileLabel.text = String.Concat("Opened CSV file:" , selectedCSVFile);
 
             //Fill the build summary rows
-            combinedBuildRowsText = "";
+            StringBuilder combinedBuildRowsText = new StringBuilder();
             for(int i=0; i<buildRows.Count; i++)
             {
                 //Add some spaces
                 if( buildRows[i][0] =="Shader Count" || buildRows[i][0] =="ComputeShader Count" || buildRows[i][0].Contains("Shader Program Count") )
                 {
-                    combinedBuildRowsText += "\n";
+                    combinedBuildRowsText.Append("\n");
                 }
 
                 //Fill the table
                 if( buildRows[i][0] !="Build Path" )//Do not show build path
                 {
-                    combinedBuildRowsText += String.Format( format, buildRows[i][0], Helper.NumberSeperator(buildRows[i][1]) );
-                    combinedBuildRowsText += "\n";
+                    combinedBuildRowsText.Append(String.Format( format, buildRows[i][0], Helper.NumberSeperator(buildRows[i][1]) ));
+                    combinedBuildRowsText.Append("\n");
                 }
             }
-            build_label_summary.text = combinedBuildRowsText;
+            build_label_summary.text = combinedBuildRowsText.ToString();
 
             //Collapse shader table
             //shaderTable.CollapseAll();
@@ -356,7 +356,7 @@ namespace GfxQA.ShaderVariantTool
                 //variantRows = variantRows.OrderByDescending(o=>int.Parse(o[defaultVariantSortColumn])).ToList();
                 variantRows = variantRows.OrderByDescending(o=>int.Parse(o[defaultVariantSortColumn])).ThenBy(o=>o[3]).ToList();
 
-                Debug.Log("ShaderVariantTool - successfully loaded "+selectedCSVFile);
+                Debug.Log(String.Concat("ShaderVariantTool - successfully loaded ",selectedCSVFile));
             }
         }
 
@@ -364,7 +364,7 @@ namespace GfxQA.ShaderVariantTool
 #region Build summary variables
 
         private List<string[]> buildRows;
-        private string combinedBuildRowsText = "";
+        //private string combinedBuildRowsText = "";
         private string format = "{0, -50}{1, 35}";
         private Label build_label_summary;
 
@@ -438,7 +438,7 @@ namespace GfxQA.ShaderVariantTool
                     {
                         shaderName = shaderRows[i][j];
                     }
-                    dum[j] = shaderName+" dummy"+j;
+                    dum[j] = String.Concat(shaderName," dummy",j);
                 }
                 dummyListTree.Add(new TreeViewItemData<string[]>(id++,dum));
                 
@@ -482,7 +482,7 @@ namespace GfxQA.ShaderVariantTool
                     if(content.Contains("dummy0"))
                     {
                         //Get and show the variant table
-                        string shaderName = content.Replace(" dummy"+actualcolumn,"");
+                        string shaderName = content.Replace(String.Concat(" dummy",actualcolumn),"");
                         VisualElement variantTable = GetVariantTable(shaderName);
                         variantTable.style.display = DisplayStyle.Flex;
                         element.Add(variantTable);
@@ -653,16 +653,17 @@ namespace GfxQA.ShaderVariantTool
                 //Show the shader summary numbers
                 VisualElement shaderSummaryElement = variantTableTemplate.Q<VisualElement>(name:"ShaderSummary");
                 Columns shaderTableColumns = shaderTable.columns;
-                string combinedShaderSummaryText = shaderName + "\n";
+                StringBuilder combinedShaderSummaryText = new StringBuilder();
+                combinedShaderSummaryText.Append(String.Concat(shaderName , "\n"));
                 for(int j=1;j<shaderTableColumns.Count;j++)
                 {
                     int CSVColumnId = Array.FindIndex(shaderRowsHeaderFromCSV, e => e == shaderTableColumns[j].title);
                     bool addPrefix = !shaderTableColumns[j].title.Contains("Program Count");
-                    combinedShaderSummaryText += String.Format( format, (addPrefix? "Variant Count " : "" ) + shaderTableColumns[j].title, Helper.NumberSeperator(shaderRows[shaderRowsId][CSVColumnId]) );
-                    combinedShaderSummaryText += "\n";
+                    combinedShaderSummaryText.Append(String.Concat(String.Format( format, (addPrefix? "Variant Count " : "" ) , shaderTableColumns[j].title, Helper.NumberSeperator(shaderRows[shaderRowsId][CSVColumnId]) )));
+                    combinedShaderSummaryText.Append("\n");
                 }
                 Label label_summary = shaderSummaryElement.Q<Label>(className:"summary-label-content");
-                label_summary.text = combinedShaderSummaryText;
+                label_summary.text = combinedShaderSummaryText.ToString();
                 MakeLabelCopyable(label_summary);
 
                 //Fill variant table
@@ -714,7 +715,7 @@ namespace GfxQA.ShaderVariantTool
 
                     //Collection size of variant table
                     Label numOfItems = variantTableTemplate.Q<Label>(name: "CollectionSize");
-                    numOfItems.text = "No. of items: "+ variantRoots.Count;
+                    numOfItems.text = String.Concat("No. of items: ", variantRoots.Count);
                     
 
                     //Bind cell data to column
@@ -845,7 +846,7 @@ namespace GfxQA.ShaderVariantTool
         //the big total
         public static double buildTime = 0;
         public static double timeSpentByTool = 0;
-        public const string timeSpentByToolTitle = "*Spent by this tool";
+        public const string timeSpentByToolTitle = "Spent by this tool";
         
         //data
         public static List<ShaderItem> shaderlist = new List<ShaderItem>();
@@ -880,7 +881,7 @@ namespace GfxQA.ShaderVariantTool
 
                 //For reading EditorLog, we can extract the contents
                 buildProcessID = System.DateTime.Now.ToString("yyyyMMdd_HH-mm-ss");
-                Debug.LogFormat(LogType.Log, LogOption.NoStacktrace, null, buildProcessIDTitleStart+buildProcessID);
+                Debug.LogFormat(LogType.Log, LogOption.NoStacktrace, null, String.Concat(buildProcessIDTitleStart,buildProcessID));
                 
                 buildTime = EditorApplication.timeSinceStartup;
                 buildProcessStarted = true;

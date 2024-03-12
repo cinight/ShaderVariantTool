@@ -22,7 +22,7 @@ namespace GfxQA.ShaderVariantTool
         {
             if(deletePlayerCacheBeforeBuild)
             {
-                string path = Application.dataPath.Replace("Assets","")+"Library/PlayerDataCache";
+                string path = String.Concat(Application.dataPath.Replace("Assets",""),"Library/PlayerDataCache");
                 if( Directory.Exists(path) )
                 {
                     Directory.Delete(path,true);
@@ -64,23 +64,23 @@ namespace GfxQA.ShaderVariantTool
             double timeSpent = EditorApplication.timeSinceStartup;
             
             //For reading EditorLog, we can extract the contents
-            Debug.LogFormat(LogType.Log, LogOption.NoStacktrace, null, SVL.buildProcessIDTitleEnd+SVL.buildProcessID);
+            Debug.LogFormat(LogType.Log, LogOption.NoStacktrace, null, String.Concat(SVL.buildProcessIDTitleEnd,SVL.buildProcessID));
 
             //Reading EditorLog
             string editorLogPath = Helper.GetEditorLogPath();
 
             //Write File
-            var outputRows = WriteCSVFile(report, editorLogPath, SVL.buildProcessIDTitleStart+SVL.buildProcessID);
+            var outputRows = WriteCSVFile(report, editorLogPath, String.Concat(SVL.buildProcessIDTitleStart,SVL.buildProcessID));
 
             //Save File
-            string fileName = "ShaderVariants_"+SVL.buildProcessID;//DateTime.Now.ToString("yyyyMMdd_HH-mm-ss");
+            string fileName = String.Concat("ShaderVariants_",SVL.buildProcessID);//DateTime.Now.ToString("yyyyMMdd_HH-mm-ss");
             string savedFile = SaveCSVFile(outputRows, fileName);
 
             //CleanUp
             outputRows.Clear();
 
             //Let user know the tool has successfully done it's job
-            Debug.Log("Build is done and ShaderVariantTool has done gathering data. Find the details on Windows > ShaderVariantTool, or look at the generated CSV report at: "+savedFile);
+            Debug.Log(String.Concat("Build is done and ShaderVariantTool has done gathering data. Find the details on Windows > ShaderVariantTool, or look at the generated CSV report at: ",savedFile));
 
             SVL.buildProcessStarted = false;
             
@@ -104,7 +104,7 @@ namespace GfxQA.ShaderVariantTool
                 //Unity & branch version
                 string version_changeset = Convert.ToString(InternalEditorUtility.GetUnityRevision(), 16);
                 string version_branch = InternalEditorUtility.GetUnityBuildBranch();
-                string unity_version = Application.unityVersion +" "+ version_branch+" ("+version_changeset+")";
+                string unity_version = String.Concat(Application.unityVersion," ",version_branch," (",version_changeset,")");
                 outputRows.Add( new string[] { "Unity" , unity_version } );
 
                 //Platform
@@ -112,12 +112,12 @@ namespace GfxQA.ShaderVariantTool
 
                 //Get Graphics API list
                 var gfxAPIsList = PlayerSettings.GetGraphicsAPIs(report.summary.platform);
-                string gfxAPIs = ""; 
+                StringBuilder gfxAPIs = new StringBuilder();
                 for(int i=0; i<gfxAPIsList.Length; i++)
                 {
-                    gfxAPIs += gfxAPIsList[i].ToString()+ " ";
+                    gfxAPIs.Append(String.Concat(gfxAPIsList[i].ToString(), " "));
                 }
-                outputRows.Add( new string[] { "Graphics API" , gfxAPIs } );
+                outputRows.Add( new string[] { "Graphics API" , gfxAPIs.ToString() } );
 
                 //Build path
                 outputRows.Add( new string[] { "Build Path" , report.summary.outputPath } );
@@ -202,20 +202,20 @@ namespace GfxQA.ShaderVariantTool
                 //Bug Check - if the shader has errors, then the program count drops, the tool should print out error message to warn user too
                 if( !si.isComputeShader && shaderInternalProgramCount != si.editorLog_variantAfterSciptableStrippingCount)
                 {
-                    Debug.LogWarning("ShaderVariantTool error #E08. Shader "+si.name+" has "+si.editorLog_variantAfterSciptableStrippingCount+
-                    " variants after ScriptableStripping, but Internal Program Count is not having same number: "+shaderInternalProgramCount+
-                    ". Check console to see if this shader has errors. And if you have [Optimize mesh data] enabled in Player Settings, this is normal to see this warning if you have modified shader keywords.");
+                    Debug.LogWarning(String.Concat("ShaderVariantTool error #E08. Shader ",si.name," has ",si.editorLog_variantAfterSciptableStrippingCount,
+                    " variants after ScriptableStripping, but Internal Program Count is not having same number: ",shaderInternalProgramCount,
+                    ". Check console to see if this shader has errors. And if you have [Optimize mesh data] enabled in Player Settings, this is normal to see this warning if you have modified shader keywords."));
                 }
                 //Bug check - in case the variants tracked in OnProcessShader VS reading EditorLog counts different result
                 if( si.count_variant_after != si.editorLog_variantAfterSciptableStrippingCount )
                 {
-                    string debugMessage = "ShaderVariantTool error #E01. "+si.name+" has different count after scriptable stripping. "+
-                                          "Tool counted there are "+si.count_variant_after+" shader variants in build, "+
-                                          "but Editor Log counted "+si.editorLog_variantAfterSciptableStrippingCount+". "+
-                                          "Mesh data optimization count is "+si.editorLog_variantMeshDataOptimizationCached+"(cached) "+si.editorLog_variantMeshDataOptimizationCompiled+"(compiled). ";
+                    string debugMessage = String.Concat("ShaderVariantTool error #E01. ",si.name," has different count after scriptable stripping. ",
+                                                        "Tool counted there are ",si.count_variant_after+" shader variants in build, ",
+                                                        "but Editor.Log counted ",si.editorLog_variantAfterSciptableStrippingCount,". ",
+                                                        "Mesh data optimization count is ",si.editorLog_variantMeshDataOptimizationCached,"(cached) ",si.editorLog_variantMeshDataOptimizationCompiled,"(compiled). ");
                     if (PlayerSettings.stripUnusedMeshComponents)
                     {
-                        debugMessage += "This might due to [Optimize Mesh Data] is enabled in Player Settings. Some shader compilation is done and thus being tracked by the tool.";
+                        debugMessage = String.Concat(debugMessage,"This might due to [Optimize Mesh Data] is enabled in Player Settings. Some shader compilation is done and thus being tracked by the tool.");
                         Debug.LogWarning(debugMessage);
                     }
                     else
@@ -225,13 +225,13 @@ namespace GfxQA.ShaderVariantTool
                 }
                 if( si.count_variant_before != si.editorLog_variantAfterBuiltinStrippingCount )
                 {
-                    string debugMessage = "ShaderVariantTool error #E02. "+si.name+" has different count before scriptable stripping. "+
-                                       "Tool counted there are "+si.count_variant_before+" variants before striptable-stripping, "+
-                                       "but Editor Log counted "+si.editorLog_variantAfterBuiltinStrippingCount+". "+
-                                       "Mesh data optimization count is "+si.editorLog_variantMeshDataOptimizationCached+"(cached) "+si.editorLog_variantMeshDataOptimizationCompiled+"(compiled). ";
+                    string debugMessage = String.Concat("ShaderVariantTool error #E02. ",si.name+" has different count before scriptable stripping. ",
+                                                        "Tool counted there are ",si.count_variant_before," variants before striptable-stripping, ",
+                                                        "but Editor.Log counted ",si.editorLog_variantAfterBuiltinStrippingCount,". ",
+                                                        "Mesh data optimization count is ",si.editorLog_variantMeshDataOptimizationCached,"(cached) ",si.editorLog_variantMeshDataOptimizationCompiled,"(compiled). ");
                     if (PlayerSettings.stripUnusedMeshComponents)
                     {
-                        debugMessage += "This might due to [Optimize Mesh Data] is enabled in Player Settings. Some shader compilation is done and thus being tracked by the tool.";
+                        debugMessage = String.Concat(debugMessage,"This might due to [Optimize Mesh Data] is enabled in Player Settings. Some shader compilation is done and thus being tracked by the tool.");
                         Debug.LogWarning(debugMessage);
                     }
                     else
@@ -247,7 +247,7 @@ namespace GfxQA.ShaderVariantTool
             
             //Time spent by the tool (list under stripping time)
             string timeSpentByToolString = Helper.TimeFormatString(SVL.timeSpentByTool);
-            outputRows.Add( new string[] { "ㅤ"+SVL.timeSpentByToolTitle , timeSpentByToolString } );
+            outputRows.Add( new string[] { String.Concat("--",SVL.timeSpentByToolTitle) , timeSpentByToolString } );
             
             //Compile time
             string compileTimeString = Helper.TimeFormatString(totalNormalShader.editorLog_timeCompile);
@@ -296,7 +296,7 @@ namespace GfxQA.ShaderVariantTool
             {
                 foreach(ShaderProgram pgm in si.programs)
                 {
-                    string program_header = "Program Count "+pgm.gfxAPI;
+                    string program_header = String.Concat("Program Count ",pgm.gfxAPI);
 
                     int shaderTableColumnId = shaderTableHeaderRow.FindIndex(e => e == program_header);
                     if(shaderTableColumnId == -1)
@@ -334,10 +334,10 @@ namespace GfxQA.ShaderVariantTool
                 {
                     foreach(ShaderProgram pgm in si.programs)
                     {
-                        int shaderTableColumnId = shaderTableHeaderRow.FindIndex(e => e == "Program Count "+pgm.gfxAPI);
+                        int shaderTableColumnId = shaderTableHeaderRow.FindIndex(e => e == String.Concat("Program Count ",pgm.gfxAPI));
                         if(shaderTableColumnId != -1)
                         {
-                            shaderTableItemRow[shaderTableColumnId] = "internal: "+pgm.count_internal+" | "+"unique: "+pgm.count_unique;
+                            shaderTableItemRow[shaderTableColumnId] = String.Concat("internal: ",pgm.count_internal," | ,unique: ",pgm.count_unique);
                         }
                     }
                 }
@@ -391,7 +391,7 @@ namespace GfxQA.ShaderVariantTool
                 sb.AppendLine(string.Join(delimiter, outputRows[index]));
             
             //Write to CSV file
-            string savedFile = Helper.GetCSVFolderPath()+fileName+".csv";
+            string savedFile = String.Concat(Helper.GetCSVFolderPath(),fileName,".csv");
             StreamWriter outStream = System.IO.File.CreateText(savedFile);
             outStream.WriteLine(sb);
             outStream.Close();
@@ -596,7 +596,7 @@ namespace GfxQA.ShaderVariantTool
                             passName = passName.Replace("\"","");
 
                             //Shader program e.g. vert / frag
-                            string programName = Helper.ExtractString(currentLine, passName+"\" (","");
+                            string programName = Helper.ExtractString(currentLine, String.Concat(passName,"\" ("),"");
                             programName = programName.Replace("\"","").Replace(")","");
 
                             //Sometime the log is like this
@@ -665,7 +665,7 @@ namespace GfxQA.ShaderVariantTool
                             }
                             else
                             {
-                                Debug.LogError("Cannot find line [After scriptable stripping:]. CurrentLine = "+currentLine);
+                                Debug.LogError(String.Concat("Cannot find line [After scriptable stripping:]. CurrentLine = ",currentLine));
                             }
 
                             //remaining variant & stripping time
@@ -766,7 +766,7 @@ namespace GfxQA.ShaderVariantTool
                             {
                                 currentLine = sr.ReadLine();
                             }
-                            if (currentLine.Contains("Serialized binary data for shader "+shaderName))
+                            if (currentLine.Contains(String.Concat("Serialized binary data for shader ",shaderName)))
                             {
                                 currentLine = sr.ReadLine();
                                 while(currentLine.Contains("total internal programs:"))
@@ -815,9 +815,9 @@ namespace GfxQA.ShaderVariantTool
             UInt64 variantCacheAndCompiledSum = sum_variantCountinCache + sum_variantCountCompiled + sum_variantCountSkipped;
             if( variantCacheAndCompiledSum != sum_variantCountinBuild)
             {
-                Debug.LogError("ShaderVariantTool error #E03. "+
-                "The sum of shader variants cached + compiled + skipped ("+variantCacheAndCompiledSum+") is not equal to the sum of remaning variants ("+
-                sum_variantCountinBuild+") in EditorLog. Please contact @mingwai on slack. This could be related to exisiting known issue: Case 1389276");
+                Debug.LogError(String.Concat("ShaderVariantTool error #E03. ",
+                "The sum of shader variants cached + compiled + skipped (",variantCacheAndCompiledSum,") is not equal to the sum of remaining variants (",
+                sum_variantCountinBuild,") in EditorLog. This could be related to existing known issue: Case 1389276"));
             }
         }
         

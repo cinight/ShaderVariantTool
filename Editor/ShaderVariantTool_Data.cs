@@ -1,12 +1,10 @@
 using System.Collections.Generic;
-using UnityEditor.Build;
 using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEditor;
 using System.Linq;
 using System;
-using System.IO;
 using System.Text.RegularExpressions;
 
 namespace GfxQA.ShaderVariantTool
@@ -118,7 +116,7 @@ namespace GfxQA.ShaderVariantTool
                 {
                     foreach(KeywordItem item in keywordItems)
                     {
-                        item.shaderKeywordDeclareType = "N/A for builtin rescource";
+                        item.shaderKeywordDeclareType = "N/A for builtin resource";
                     }
                     return;
                 }
@@ -264,11 +262,11 @@ namespace GfxQA.ShaderVariantTool
                 //Bug checking
                 if( !sk.IsValid() )
                 {
-                    Debug.LogError("ShaderVariantTool error #E06. Shader "+shaderName+" Keyword "+shaderKeywordName+" is invalid.");
+                    Debug.LogError(String.Concat("ShaderVariantTool error #E06. Shader ",shaderName," Keyword ",shaderKeywordName," is invalid."));
                 }
                 if( !data.shaderKeywordSet.IsEnabled(sk) )
                 {
-                    Debug.LogWarning("ShaderVariantTool error #E07. Shader "+shaderName+" Keyword "+shaderKeywordName+" is not enabled. You can create a custom shader stripping script to strip it.");
+                    Debug.LogWarning(String.Concat("ShaderVariantTool error #E07. Shader ",shaderName," Keyword ",shaderKeywordName," is not enabled. You can create a custom shader stripping script to strip it."));
                 }
             }
         }
@@ -296,11 +294,11 @@ namespace GfxQA.ShaderVariantTool
                 //Bug checking
                 if( !sk.IsValid() )
                 {
-                    Debug.LogError("ShaderVariantTool error #E04. Shader "+shaderName+" Keyword "+shaderKeywordName+" is invalid.");
+                    Debug.LogError(String.Concat("ShaderVariantTool error #E04. Shader ",shaderName," Keyword ",shaderKeywordName," is invalid."));
                 }
                 if( !data.shaderKeywordSet.IsEnabled(sk) )
                 {
-                    Debug.LogWarning("ShaderVariantTool error #E05. Shader "+shaderName+" Keyword "+shaderKeywordName+" is not enabled. You can create a custom shader stripping script to strip it.");
+                    Debug.LogWarning(String.Concat("ShaderVariantTool error #E05. Shader ",shaderName," Keyword ",shaderKeywordName," is not enabled. You can create a custom shader stripping script to strip it."));
                 }
             }
         }
