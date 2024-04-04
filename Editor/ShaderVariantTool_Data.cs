@@ -62,25 +62,16 @@ namespace GfxQA.ShaderVariantTool
         }
 
         public List<KeywordItem> keywordItems = new List<KeywordItem>();
+        public List<string> keywordItemsLookupString = new List<string>();
+        
+        private string GetKeywordItemsLookupString(KeywordItem scv)
+        {
+            return String.Concat(scv.shaderName, scv.passName, scv.passType, scv.shaderType, scv.kernelName, scv.graphicsTier, scv.buildTarget, scv.shaderCompilerPlatform, scv.platformKeywords, scv.shaderKeywordName, scv.shaderKeywordType);
+        }
 
         public int FindMatchingVariantItem(KeywordItem scv)
         {
-            //find the matching SCV
-            int matchedId = keywordItems.FindIndex
-            ( e =>
-                e.shaderName == scv.shaderName &&
-                e.passName == scv.passName &&
-                e.passType == scv.passType &&
-                e.shaderType == scv.shaderType &&
-                e.kernelName == scv.kernelName &&
-                e.graphicsTier == scv.graphicsTier &&
-                e.buildTarget == scv.buildTarget &&
-                e.shaderCompilerPlatform == scv.shaderCompilerPlatform &&
-                e.platformKeywords == scv.platformKeywords &&
-                e.shaderKeywordName == scv.shaderKeywordName &&
-                e.shaderKeywordType == scv.shaderKeywordType
-            );
-
+            int matchedId = keywordItemsLookupString.IndexOf(GetKeywordItemsLookupString(scv));
             return matchedId;
         }
 
@@ -92,6 +83,7 @@ namespace GfxQA.ShaderVariantTool
             {
                 scv.appearCount_before++;
                 keywordItems.Add(scv);
+                keywordItemsLookupString.Add(GetKeywordItemsLookupString(scv));
             }
             else
             {

@@ -50,19 +50,6 @@ namespace GfxQA.ShaderVariantTool
                 Helper.SetLogNextBuild(v.newValue);
             });
             
-            //Message when no CSV found ==================================================================
-
-            //If there is no CSV file available, show an message to hint people to make a build first
-            if(CSVFileNames == null) GetCSVFileNames();
-            if(CSVFileNames.Count == 0)
-            {
-                root.styleSheets.Add(Resources.Load<StyleSheet>("ShaderVariantTool_Style"));
-                Label initialMessage = new Label("Build the player and reopen this tool.");
-                initialMessage.AddToClassList("initial-message");
-                root.Add(initialMessage);
-                return;
-            }
-
             //Culture Setting ==================================================================
 
             //Read culture pref
@@ -80,6 +67,24 @@ namespace GfxQA.ShaderVariantTool
             {
                 Helper.UpdateCultureInfo(v.newValue);
             });
+            
+            //Message when no CSV found ==================================================================
+
+            //If there is no CSV file available, show an message to hint people to make a build first
+            if(CSVFileNames == null) GetCSVFileNames();
+            if(CSVFileNames.Count == 0)
+            {
+                //Hide CSV UI
+                root.Q("HideIfNoCSV").style.display = DisplayStyle.None;
+                
+                //Show the message only
+                root.styleSheets.Add(Resources.Load<StyleSheet>("ShaderVariantTool_Style"));
+                Label initialMessage = new Label("No ShaderVariantTool CSV found. Build the player and reopen this tool or click refresh CSV list above.");
+                initialMessage.AddToClassList("initial-message");
+                root.Add(initialMessage);
+                
+                return;
+            }
 
             //CSV buttons ==================================================================
 

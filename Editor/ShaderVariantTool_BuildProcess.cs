@@ -337,7 +337,7 @@ namespace GfxQA.ShaderVariantTool
                         int shaderTableColumnId = shaderTableHeaderRow.FindIndex(e => e == String.Concat("Program Count ",pgm.gfxAPI));
                         if(shaderTableColumnId != -1)
                         {
-                            shaderTableItemRow[shaderTableColumnId] = String.Concat("internal: ",pgm.count_internal," | ,unique: ",pgm.count_unique);
+                            shaderTableItemRow[shaderTableColumnId] = String.Concat("internal: ",pgm.count_internal," | unique: ",pgm.count_unique);
                         }
                     }
                 }
