@@ -201,7 +201,10 @@ namespace GfxQA.ShaderVariantTool
             {
                 KeywordSet ks = new KeywordSet();
                 ks.declareType = m.Groups[1].Value;
-                ks.keywords = m.Groups[2].Value.Split(' ');
+                string keywords = m.Groups[2].Value;
+                int comment = keywords.IndexOf("/");
+                if(comment>-1) keywords = keywords.Substring(0, comment);
+                ks.keywords = keywords.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
                 if (IsKeywordDeclaration(ks.declareType))
                 {
